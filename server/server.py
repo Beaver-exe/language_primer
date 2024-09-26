@@ -4,18 +4,8 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-groups = [
-    {"id": 1, "groupName": "Group 1", "members": [1, 2, 3]},
-    {"id": 2, "groupName": "Group 2", "members": [4, 5]},
-]
-
-students = [
-    {"id": 1, "name": "Alice"},
-    {"id": 2, "name": "Bob"},
-    {"id": 3, "name": "Charlie"},
-    {"id": 4, "name": "David"},
-    {"id": 5, "name": "Eve"},
-]
+groups = []
+students = []
 
 @app.route('/api/groups', methods=['GET'])
 def get_groups():
@@ -41,7 +31,7 @@ def create_group():
     Route to add a new group
     param groupName: The name of the group (from request body)
     param members: Array of member names (from request body)
-    return: The created group object
+    return: The created group object with new students added
     """
     
     # Getting the request body (DO NOT MODIFY)
@@ -49,18 +39,30 @@ def create_group():
     group_name = group_data.get("groupName")
     group_members = group_data.get("members")
     
-    # TODO: implement storage of a new group and return their info (sample response below)
-    group_id = len(groups) + 1
+    member_ids = []
+    for member_name in group_members:
+        existing_student = next((student for student in students if student["name"] == member_name), None)
+        if existing_student:
+            member_ids.append(existing_student["id"])
+        else:
+            new_student_id = len(students) + 1
+            new_student = {
+                "id": new_student_id,
+                "name": member_name
+            }
+            students.append(new_student)
+            member_ids.append(new_student_id)
     
+    group_id = len(groups) + 1
     new_group = {
         "id": group_id,
         "groupName": group_name,
-        "members": group_members
+        "members": member_ids
     }
     
     groups.append(new_group)
-
     return jsonify(new_group)
+
 
 @app.route('/api/groups/<int:group_id>', methods=['DELETE'])
 def delete_group(group_id):
